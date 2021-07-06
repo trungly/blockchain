@@ -1,3 +1,5 @@
+import re
+
 from block import Block
 from prettytable import PrettyTable
 
@@ -20,12 +22,18 @@ class Chain:
         return self._chain[index]
 
     def add_block_with_data(self, data):
-        """
-        Create a new block containing the data and add it to the end of the chain
-        """
-        previous_hash = self.block(-1).get_hash()
-        block = Block(self.height(), previous_hash, data)
-        self._chain.append(block)
+        nonce = 1
+        while True:
+            if nonce == 1:
+                data += ":Nonce:1"
+            else:
+                data = re.sub(r":Nonce:\d+", ":Nonce:" + str(nonce), data)
+            nonce += 1
+
+            b = Block(self.height(), self.block(-1).get_hash(), data)
+            if b.get_hash().startswith('0'):
+                self._chain.append(b)
+                break
 
     def is_valid(self):
         """
